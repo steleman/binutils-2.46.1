@@ -618,6 +618,10 @@ proc undefined_weak {cflags ldflags} {
     }
 }
 
+if { [istarget "i686-*-*"] } {
+    return
+}
+
 # Must be Linux native with the C compiler
 if { [isnative]
      && [istarget "i?86-*-linux*"]

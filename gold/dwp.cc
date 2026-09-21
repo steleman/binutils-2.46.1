@@ -2418,6 +2418,8 @@ main(int argc, char** argv)
     {
       Dwo_file exe_file(exe_filename);
       exe_file.read_executable(&files);
+      if (files.empty())
+        gold_fatal(_("Could not find any dwo links in specified EXE"));
     }
 
   // Add any additional files listed on command line.

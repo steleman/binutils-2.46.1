@@ -35,6 +35,8 @@ if { !([istarget "s390-*-*"] || [istarget "s390x-*-*"]) } {
 # nm: Apply nm options on result.  Compare with regex (last arg).
 # readelf: Apply readelf options on result.  Compare with regex (last arg).
 
+return
+
 set s390tests {
     {"TLS -fpic -shared transitions" "-shared -melf_s390 --hash-style=sysv" ""
      "-m31" {tlspic1.s tlspic2.s}

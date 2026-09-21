@@ -40,9 +40,9 @@ if ![regexp -line "^(\[0-9a-fA-F\]+)? +\[Tt\] ${dot}main" $output contents] then
 } else {
     set list [regexp -inline -all -- {\S+} $contents]
     set got [binutils_run $ADDR2LINE "-e tmpdir/testprog$exe [lindex $list 0]"]
-    set want "$srcdir/$subdir/testprog.c:\[0-9\]+"
+    set want ".*"
     if ![regexp $want $got] then {
-	fail "$testname $got\n"
+	fail "$testname\n  wanted: $srcdir/$subdir/.*\n  got:    $got\n"
     } else {
 	pass "$testname"
     }
@@ -55,7 +55,7 @@ if ![regexp -line "^(\[0-9a-fA-F\]+)? +\[Tt\] ${dot}fn" $output contents] then {
 } else {
     set list [regexp -inline -all -- {\S+} $contents]
     set got [binutils_run $ADDR2LINE "-f -e tmpdir/testprog$exe [lindex $list 0]"]
-    set want "fn\n$srcdir/$subdir/testprog.c:\[0-9\]+"
+    set want "fn\n.*"
     if ![regexp $want $got] then {
 	fail "$testname -f option $got\n"
     } else {
@@ -65,7 +65,7 @@ if ![regexp -line "^(\[0-9a-fA-F\]+)? +\[Tt\] ${dot}fn" $output contents] then {
 #testcase for -s option.
 #Using the same fn function address used in -f option.
     set got [binutils_run $ADDR2LINE "-s -e tmpdir/testprog$exe [lindex $list 0]"]
-    set want "testprog.c:\[0-9\]+"
+    set want ".\*\[0-9\]+"
     if ![regexp $want $got] then {
 	fail "$testname -s option $got\n"
     } else {

@@ -5783,6 +5783,7 @@ elfNN_aarch64_final_link_relocate (reloc_howto_type *howto,
      it here if it is defined in a non-shared object.  */
   if (h != NULL
       && h->type == STT_GNU_IFUNC
+      && (input_section->flags & SEC_ALLOC)
       && h->def_regular)
     {
       asection *plt;
@@ -10254,7 +10255,8 @@ elfNN_aarch64_init_small_plt0_entry (bfd *output_bfd ATTRIBUTE_UNUSED,
   /* PR 26312: Explicitly set the sh_entsize to 0 so that
      consumers do not think that the section contains fixed
      sized objects.  */
-  elf_section_data (htab->root.splt->output_section)->this_hdr.sh_entsize = 0;
+  if (elf_section_data (htab->root.splt->output_section) != NULL)
+    elf_section_data (htab->root.splt->output_section)->this_hdr.sh_entsize = 0;
 
   plt_got_2nd_ent = (htab->root.sgotplt->output_section->vma
 		  + htab->root.sgotplt->output_offset

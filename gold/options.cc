@@ -989,7 +989,7 @@ parse_short_option(int argc, const char** argv, int pos_in_argv_i,
     }
 
   // If we're a -z option, we need to parse our argument as a
-  // long-option, e.g. "-z stacksize=8192".
+  // long-option, e.g. "-z stack-size=8192".
   if (retval == &dash_z)
     {
       int dummy_i = 0;

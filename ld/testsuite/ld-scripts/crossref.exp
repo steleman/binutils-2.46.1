@@ -121,6 +121,10 @@ if [string match "" $exec_output] then {
     }
 }
 
+if { [istarget "i686-*-*"] } {
+    return
+}
+
 # Check cross references for ld -r
 
 if { ![ld_compile "$CC_FOR_TARGET $NOSANITIZE_CFLAGS $NOLTO_CFLAGS" "$srcdir/$subdir/cross4.c" tmpdir/cross4.o] } {

@@ -503,7 +503,7 @@ case "${targ}" in
     ;;
 
 #ifdef BFD64
-  bpf-*-none)
+  bpf-*-none | bpf-*)
     targ_defvec=bpf_elf64_le_vec
     targ_selvecs=bpf_elf64_be_vec
     targ_underscore=yes

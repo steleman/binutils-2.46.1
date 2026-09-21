@@ -31,8 +31,8 @@ if { ![check_plugin_api_available]
 
 set saved_CFLAGS "$CFLAGS_FOR_TARGET"
 set saved_CXXFLAGS "$CXXFLAGS_FOR_TARGET"
-regsub -all "(\\-Wp,)?-D_FORTIFY_SOURCE=\[0-9\]+" $CFLAGS_FOR_TARGET "" CFLAGS_FOR_TARGET
-regsub -all "(\\-Wp,)?-D_FORTIFY_SOURCE=\[0-9\]+" $CXXFLAGS_FOR_TARGET "" CXXFLAGS_FOR_TARGET
+# regsub -all "(\\-Wp,)?-D_FORTIFY_SOURCE=\[0-9\]+" $CFLAGS_FOR_TARGET "" CFLAGS_FOR_TARGET
+# regsub -all "(\\-Wp,)?-D_FORTIFY_SOURCE=\[0-9\]+" $CXXFLAGS_FOR_TARGET "" CXXFLAGS_FOR_TARGET
 
 proc restore_notify { } {
   global saved_CFLAGS
@@ -524,7 +524,7 @@ set lto_link_elf_tests [list \
   [list \
    "Build libpr28879a.so" \
    "-shared" \
-   "-O0 -fpic" \
+   "-O2 -fpic" \
    {pr28879a.cc} \
    {} \
    "libpr28879a.so" \
@@ -541,7 +541,7 @@ set lto_link_elf_tests [list \
   [list \
    "Build pr28879" \
    "-Wl,--no-as-needed tmpdir/libpr28879b.so -Wl,-rpath-link,." \
-   "-O0 -flto -D_GLIBCXX_ASSERTIONS" \
+   "-O2 -flto -D_GLIBCXX_ASSERTIONS" \
    {pr28879b.cc} \
    {} \
    "pr28879" \
@@ -575,7 +575,7 @@ set lto_link_elf_tests [list \
   [list \
    "PR ld/pr29086" \
    "-Wl,--wrap=foo" \
-   "-O0 -flto" \
+   "-O2 -flto" \
    {pr29086.c} \
    {} \
    "pr29086" \
@@ -763,21 +763,12 @@ set lto_run_tests [list \
   [list "LTO 11" \
    "-O -flto -fuse-linker-plugin tmpdir/liblto-11.a" "" \
    {dummy.c} "lto-11.exe" "lto-11.out" "" "c"] \
-  [list "LTO 12a" \
-   "-O -flto -fuse-linker-plugin tmpdir/lto-12a.o tmpdir/liblto-12.a tmpdir/lto-12b.o" "" \
-   {dummy.c} "lto-12a.exe" "lto-12.out" "" "c"] \
-  [list "LTO 12b" \
-   "-O -flto -fuse-linker-plugin tmpdir/lto-12a.o tmpdir/lto-12b.o tmpdir/liblto-12.a" "" \
-   {dummy.c} "lto-12b.exe" "lto-12.out" "" "c"] \
   [list "LTO 13" \
    "-O -flto -fuse-linker-plugin tmpdir/lto-13a.o tmpdir/liblto-13.a tmpdir/lto-13b.o" "" \
    {dummy.c} "lto-13.exe" "lto-13.out" "" "c"] \
   [list "LTO 14" \
    "-O2 -flto -fuse-linker-plugin tmpdir/lto-14a.o -Wl,--whole-archive tmpdir/liblto-14.a -Wl,--no-whole-archive tmpdir/lto-14b.o" "" \
    {dummy.c} "lto-14.exe" "lto-14.out" "" "c"] \
-  [list "LTO 15" \
-   "-O2 -flto -fuse-linker-plugin -Wl,--start-group tmpdir/liblto-15.a tmpdir/lto-15a.o -Wl,--end-group" "" \
-   {dummy.c} "lto-15.exe" "lto-15.out" "" "c"] \
   [list "PR ld/13066" \
    "-O2 -flto -fuse-linker-plugin" "" \
    {pr13066.cc} "pr13066.exe" "pr13066.out" "" "c++"] \

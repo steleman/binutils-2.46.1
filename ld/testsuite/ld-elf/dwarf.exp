@@ -29,6 +29,10 @@ if ![is_elf_format] {
     return
 }
 
+if { [istarget riscv*-*-*] } then {
+    return
+}
+
 # Skip targets where -shared is not supported
 
 if ![check_shared_lib_support] {

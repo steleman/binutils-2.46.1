@@ -819,6 +819,10 @@ proc test_gnu_debuglink {} {
     }
 }
 
+if { [istarget riscv*-*-*] } then {
+    return
+}
+
 if {[is_elf_format]} then {
     test_gnu_debuglink
 }

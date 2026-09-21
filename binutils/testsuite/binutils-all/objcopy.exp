@@ -602,14 +602,19 @@ proc strip_test { } {
     set exec_output [binutils_run $STRIP "$STRIPFLAGS $objfile"]
     set exec_output [prune_warnings $exec_output]
     if ![string equal "" $exec_output] {
-	fail $test
+	fail "$test (warnings in linker output)"
+	verbose $exec_output
 	return
     }
 
     set exec_output [binutils_run $NM "-a $NMFLAGS $objfile"]
     set exec_output [prune_warnings $exec_output]
     if ![string match "*: no symbols*" $exec_output] {
-	fail $test
+
+	# The RISC-V target compiles with annotation enabled and these symbols remain after stripping.
+	setup_xfail riscv*-*-* 
+
+	fail "$test (symbols in nm output)"
 	return
     }
 
@@ -658,6 +663,9 @@ proc strip_test_with_saving_a_symbol { } {
 
     pass $test
 }
+
+# The RISC-V target compiles with annotation enabled and these symbols remain after stripping.
+setup_xfail riscv*-*-* 
 
 strip_test_with_saving_a_symbol
 
@@ -1503,6 +1511,8 @@ proc objcopy_test_without_global_symbol { } {
 # The AArch64 and ARM targets preserve mapping symbols
 # in object files, so they will fail this test.
 setup_xfail aarch64*-*-* arm*-*-*
+# The RISC-V target compiles with annotation enabled and these symbols remain after stripping.
+setup_xfail riscv*-*-* 
 
 objcopy_test_without_global_symbol
 

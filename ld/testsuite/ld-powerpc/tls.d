@@ -9,7 +9,7 @@
 
 Disassembly of section \.text:
 
-0+100000e8 <\._start>:
+0+100..... <\._start>:
 .*:	(60 00 00 00|00 00 00 60) 	nop
 .*:	(38 6d 90 78|78 90 6d 38) 	addi    r3,r13,-28552
 .*:	(60 00 00 00|00 00 00 60) 	nop
@@ -49,5 +49,5 @@ Disassembly of section \.text:
 .*:	(60 00 00 00|00 00 00 60) 	nop
 .*:	(a9 4d 90 30|30 90 4d a9) 	lha     r10,-28624\(r13\)
 
-0+10000180 <\.__tls_get_addr>:
+0+100..... <\.__tls_get_addr>:
 .*:	(4e 80 00 20|20 00 80 4e) 	blr

@@ -855,6 +855,12 @@ class General_options
 	      N_("(ARM only) Do not warn about objects with incompatible "
 		 "enum sizes"));
 
+  DEFINE_bool_ignore(error_execstack, options::TWO_DASHES, '\0',
+		     N_("Ignored"), N_("Ignored"));
+
+  DEFINE_bool_ignore(error_rwx_segments, options::TWO_DASHES, '\0',
+		     N_("Ignored"), N_("Ignored"));
+
   DEFINE_special(exclude_libs, options::TWO_DASHES, '\0',
 		 N_("Exclude libraries from automatic export"),
 		 N_(("lib,lib ...")));
@@ -1109,6 +1115,9 @@ class General_options
   DEFINE_optional_string(package_metadata, options::TWO_DASHES, '\0', NULL,
 			 N_("Generate package metadata note"),
 			 N_("[=JSON]"));
+
+  DEFINE_bool_ignore(pack_relative_relocs, options::DASH_Z, '\0',
+		     N_("Ignored"), N_("Ignored"));
 
   DEFINE_bool(pie, options::ONE_DASH, '\0', false,
 	      N_("Create a position independent executable"),

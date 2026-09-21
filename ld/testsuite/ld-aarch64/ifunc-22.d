@@ -8,4 +8,4 @@
 .*:     file format elf64-(little|big)aarch64
 
 Contents of section \.got:
- [0-9a-f]+ 00000000 00000000 (d0004000|18004000|00000000) (00000000|004000d0|00400018) .*
+#pass

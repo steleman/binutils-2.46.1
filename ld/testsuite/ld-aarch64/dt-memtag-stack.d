@@ -1,5 +1,5 @@
 #source: dt-memtag.s
-#ld: -shared -z memtag-stack
+#ld: -shared -z memtag-stack -z notext
 #readelf: -d
 
 #...

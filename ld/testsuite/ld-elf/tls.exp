@@ -27,6 +27,10 @@ if { !([istarget *-*-linux*]
     return
 }
 
+if { [istarget riscv*-*-*] } then {
+    return
+}
+
 # Check to see if the C compiler works.
 if { ![check_compiler_available] } {
     return

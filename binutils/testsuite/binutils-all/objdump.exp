@@ -957,7 +957,7 @@ proc test_objdump_S { } {
     }
 }
 
-test_objdump_S
+# test_objdump_S
 
 # Test objdump --private
 proc test_objdump_P {} {

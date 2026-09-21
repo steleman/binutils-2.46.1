@@ -1633,6 +1633,12 @@ proc compile_one_cc { src output additional_flags } {
 proc check_ctf_available { } {
     global ctf_available_saved
 
+    # Skip CTF tests for the Risc-V target for now, as the
+    # tests have not been tweaked to support the riscv format.
+    if { [istarget "riscv*-*-linux*"] } {
+	return 0
+    }
+    
     if {![info exists ctf_available_saved]} {
 	set ctf_available_saved 0
 

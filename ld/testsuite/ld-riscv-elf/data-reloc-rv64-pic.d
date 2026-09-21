@@ -1,6 +1,6 @@
 #source: data-reloc.s
 #as: -march=rv64i -mabi=lp64 -defsym __64_bit__=1 -defsym __abs__=1 -defsym __addr__=1 -defsym __undef__=1
-#ld: -m[riscv_choose_lp64_emul] -Ttext 0x8000 --defsym _start=0x0 --defsym abs=0x100 --defsym abs_local=0x200 -shared
+#ld: -m[riscv_choose_lp64_emul] -Ttext 0x8000 --defsym _start=0x0 --defsym abs=0x100 --defsym abs_local=0x200 -shared -z notext
 #objdump: -dR
 
 .*:[ 	]+file format .*

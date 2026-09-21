@@ -795,6 +795,9 @@ proc prune_warnings_extra { text } {
     # Ignore warnings about linking objects with an old sframe format
     regsub -all {(^|\n)([^\n]* unexpected SFrame format version [^\n]*\n[^\n]* SFrame section ignored\n?)+} $text {\1} text
 
+    # Skip warnings about the LTO plugin being needed.
+    regsub -all "(^|\n)(\[^\n\]*:\[^\n\]*plugin needed to handle lto object\[^\n\]*\n?)+" $text "\\1" text
+    
     return $text
 }
 

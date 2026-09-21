@@ -29,6 +29,12 @@ if ![isnative] {
     return
 }
 
+# FIXME: The AArch64 rawhide libz and libjanson libraries are built
+# without GCS support and so cannot be linked.
+if {[istarget "aarch64*-*-*"] } {
+    return
+}
+
 # Skip if OFILES aren't provided, it can happen when lauching
 # the testsuites outside the build directory.
 if {![info exists OFILES]} {

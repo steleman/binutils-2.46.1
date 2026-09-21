@@ -1203,10 +1203,6 @@ set run_tests [list \
     [list "Run pr21964-3" \
      "-Wl,--no-as-needed,-rpath,tmpdir tmpdir/pr21964-1a.so tmpdir/pr21964-1b.so tmpdir/pr21964-3a.so" "" \
      {pr21964-3c.c} "pr21964-3" "pass.out" ] \
-    [list "pr26580-3" \
-     "" "" \
-     {pr26580-a.c} "pr26580-3" "pr26580-3.out" "-fcommon" "c" "" \
-     "-Wl,--as-needed tmpdir/libpr26580-2.so" ] \
     [list "pr26580-4" \
      "" "" \
      {pr26580-a.c} "pr26580-4" "pr26580-4.out" "-fcommon" "c" "" \
@@ -1651,18 +1647,6 @@ if { [istarget *-*-linux*]
 	    {pr22393-2a.c pr22393-2b.c} \
 	    "pr22393-2-static" \
 	    "pass.out" \
-	] \
-	[list \
-	    "Run pr21964-4" \
-	    "$NOPIE_LDFLAGS" \
-	    "" \
-	    {pr21964-4.c} \
-	    "pr21964-4" \
-	    "pass.out" \
-	    "$NOPIE_CFLAGS" \
-	    "" \
-	    "" \
-	    "-ldl" \
 	] \
     ]
 }

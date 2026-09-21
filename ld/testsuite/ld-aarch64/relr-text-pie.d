@@ -1,5 +1,5 @@
 #source: relr-text.s
-#ld: -pie -z pack-relative-relocs -T relocs.ld
+#ld: -pie -z pack-relative-relocs -T relocs.ld -z notext
 #readelf: -drW
 
 #...

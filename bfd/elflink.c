@@ -13788,7 +13788,7 @@ _bfd_elf_final_link (bfd *abfd, struct bfd_link_info *info)
 		{
 		  if (info->textrel_check == textrel_check_error)
 		    info->callbacks->einfo
-		      (_("%P%X: read-only segment has dynamic relocations\n"));
+		      (_("%P%X: error: read-only segment has dynamic relocations\n"));
 		  else if (bfd_link_dll (info))
 		    info->callbacks->einfo
 		      (_("%P: warning: creating DT_TEXTREL in a shared object\n"));

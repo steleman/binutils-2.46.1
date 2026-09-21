@@ -132,6 +132,10 @@ if [is_pecoff_format] {
     append libs " --image-base=0x10000000"
 }
 
+if { [istarget riscv*-*-*] } then {
+    return
+}
+
 set plugin_tests [list \
     [list "load plugin" "-plugin $plugin_path \
     $testobjfiles $libs" "" "" "" {{ld plugin-1.d}} "main.x" ] \

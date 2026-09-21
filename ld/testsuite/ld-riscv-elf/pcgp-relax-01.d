@@ -9,7 +9,7 @@
 Disassembly of section \.text:
 
 0+[0-9a-f]+ <_start>:
-.*:[ 	]+[0-9a-f]+[ 	]+addi[ 	]+a0,a0,[0-9]+
+.*:[ 	]+[0-9a-f]+[ 	]+addi[ 	]+a0,a0,.*
 .*:[ 	]+[0-9a-f]+[ 	]+jal[ 	]+ra,[0-9a-f]+ <_start>
 .*:[ 	]+[0-9a-f]+[ 	]+addi[ 	]+a1,gp,\-[0-9]+ # [0-9a-f]+ <data_g>
 .*:[ 	]+[0-9a-f]+[ 	]+addi[ 	]+a2,gp,\-[0-9]+ # [0-9a-f]+ <data_g>

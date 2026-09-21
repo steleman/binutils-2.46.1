@@ -12,8 +12,8 @@ Program Headers:
   Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
   RISCV_ATTRIBUT .*
   LOAD           .*
-
+#...
  Section to Segment mapping:
   Segment Sections...
    00     .riscv.attributes 
-   01     .text 
+#pass

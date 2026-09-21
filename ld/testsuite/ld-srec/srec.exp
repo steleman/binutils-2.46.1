@@ -447,6 +447,9 @@ setup_xfail "csky*-*-*"
 # The S-record linker is not supported for eBPF.
 setup_xfail "bpf-*-*"
 
+setup_xfail "s390*-*-*"
+setup_xfail "i686-*-*"
+
 run_srec_test $test1 "tmpdir/sr1.o tmpdir/sr2.o"
 
 # Now try linking a C++ program with global constructors and

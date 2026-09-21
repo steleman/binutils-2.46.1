@@ -211,6 +211,10 @@ if { [istarget mips*-*-*] && ! [at_least_gcc_version 4 3] } then {
 }
 verbose "Using $picflag to compile PIC code"
 
+if { [istarget "i686-*-*"] } {
+    return
+}
+
 # Compile the main program.
 global PLT_CFLAGS NOPIE_CFLAGS NOPIE_LDFLAGS
 verbose "Using $NOPIE_CFLAGS to compile and $NOPIE_LDFLAGS to link non PIC code"

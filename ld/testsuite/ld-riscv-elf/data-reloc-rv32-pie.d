@@ -1,6 +1,6 @@
 #source: data-reloc.s
 #as: -march=rv32i -mabi=ilp32 -defsym __abs__=1 -defsym __addr__=1
-#ld: -m[riscv_choose_ilp32_emul] -Ttext 0x8000 --defsym _start=0x0 --defsym abs=0x100 --defsym abs_local=0x200 -pie
+#ld: -m[riscv_choose_ilp32_emul] -Ttext 0x8000 --defsym _start=0x0 --defsym abs=0x100 --defsym abs_local=0x200 -pie -z notext
 #objdump: -dR
 
 .*:[ 	]+file format .*
