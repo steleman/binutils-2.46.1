@@ -475,6 +475,10 @@ struct dwarf_eh_frame_hdr_info
      We build it if we successfully read all .eh_frame input sections
      and recognize them.  */
   bool table;
+  /* TRUE if .eh_frame_hdr uses 8-byte encodings, pcrel sdata8 for
+     eh_frame_ptr and datarel sdata8 for the search table, because code or
+     .eh_frame may be more than 2GiB from .eh_frame_hdr.  */
+  bool hdr_64;
   struct eh_frame_array_ent *array;
 };
 

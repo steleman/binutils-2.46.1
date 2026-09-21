@@ -57,6 +57,15 @@ ARD(MOVW_SABS_G1                 , STATIC ,  AARCH64    ,   Y,   0,   32,32     
 ARD(MOVW_SABS_G2                 , STATIC ,  AARCH64    ,   Y,   0,   48,48               ,   32,47 , Symbol::ABSOLUTE_REF ,                         MOVW  )
 // Above is from Table 4-8, Group relocations to create a 16, 32, 48, or 64 bit signed data or offset value inline.
 
+ARD(MOVW_PREL_G0                 , STATIC ,  AARCH64    ,   Y,   0,   16,16             ,    0,15 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_PREL_G0_NC              , STATIC ,  AARCH64    ,   Y,   0,   0,0               ,    0,15 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_PREL_G1                 , STATIC ,  AARCH64    ,   Y,   1,   32,32             ,   16,31 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_PREL_G1_NC              , STATIC ,  AARCH64    ,   Y,   1,   0,0               ,   16,31 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_PREL_G2                 , STATIC ,  AARCH64    ,   Y,   2,   48,48             ,   32,47 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_PREL_G2_NC              , STATIC ,  AARCH64    ,   Y,   2,   0,0               ,   32,47 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_PREL_G3                 , STATIC ,  AARCH64    ,   Y,   3,   0,0               ,   48,63 , Symbol::RELATIVE_REF  ,                         MOVW  )
+// Above is from Table 4-8, Group relocations to create a 16, 32, 48, or 64 bit PC-relative offset inline.
+
 ARD(LD_PREL_LO19		 , STATIC ,  AARCH64    ,   Y,  -1,   20,20		  ,    2,20 , Symbol::RELATIVE_REF , 			     LDST  )
 ARD(ADR_PREL_LO21		 , STATIC ,  AARCH64    ,   Y,  -1,   20,20		  ,    0,20 , Symbol::RELATIVE_REF , 			     ADR   )
 ARD(ADR_PREL_PG_HI21             , STATIC ,  AARCH64    ,   Y,  -1,   32,32               ,   12,32 , Symbol::RELATIVE_REF ,                         ADRP  )
@@ -73,6 +82,16 @@ ARD(ADR_GOT_PAGE                 , STATIC ,  AARCH64    ,   Y,  -1,   32,32     
 ARD(LD64_GOT_LO12_NC             , STATIC ,  AARCH64    ,   Y,  -1,    0,RL_CHECK_ALIGN8  ,    3,11 , Symbol::ABSOLUTE_REF ,                         LDST  )
 ARD(LD64_GOTPAGE_LO15            , STATIC ,  AARCH64    ,   Y,  -1,    0,15               ,    3,14 , Symbol::RELATIVE_REF ,                         LDST  )
 // Above 2 relocs are from Table 4-14, GOT-relative instruction relocations. (Some relocs in the table are not implemented yet.)
+
+ARD(MOVW_GOTOFF_G0               , STATIC ,  AARCH64    ,   Y,   0,   16,16             ,    0,15 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_GOTOFF_G0_NC            , STATIC ,  AARCH64    ,   Y,   0,   0,0               ,    0,15 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_GOTOFF_G1               , STATIC ,  AARCH64    ,   Y,   1,   32,32             ,   16,31 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_GOTOFF_G1_NC            , STATIC ,  AARCH64    ,   Y,   1,   0,0               ,   16,31 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_GOTOFF_G2               , STATIC ,  AARCH64    ,   Y,   2,   48,48             ,   32,47 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_GOTOFF_G2_NC            , STATIC ,  AARCH64    ,   Y,   2,   0,0               ,   32,47 , Symbol::RELATIVE_REF  ,                         MOVW  )
+ARD(MOVW_GOTOFF_G3               , STATIC ,  AARCH64    ,   Y,   3,   0,0               ,   48,63 , Symbol::RELATIVE_REF  ,                         MOVW  )
+// Above is from Table 4-14, GOT-relative MOVW relocations, 300-306, used by
+// the large position-independent code model.
 
 ARD(TSTBR14                      , STATIC ,  CFLOW      ,   N,  -1,   15,15               ,    2,15 , (Symbol::FUNCTION_CALL|Symbol::ABSOLUTE_REF) , TBZNZ )
 ARD(CONDBR19                     , STATIC ,  CFLOW      ,   N,  -1,   20,20               ,    2,20 , (Symbol::FUNCTION_CALL|Symbol::ABSOLUTE_REF) , CONDB )
@@ -93,8 +112,8 @@ ARD(TLSLD_ADD_DTPREL_HI12        , STATIC ,  AARCH64    ,   Y,  -1,    0,24     
 ARD(TLSLD_ADD_DTPREL_LO12_NC     , STATIC ,  AARCH64    ,   Y,  -1,    0,0                ,    0,11 , Symbol::TLS_REF ,                              ADD   )
 // Above is from Table 4-16, Local Dynamic TLS relocations, 517-573.
 
-ARD(TLSIE_MOVW_GOTTPREL_G1       , STATIC ,  AARCH64    ,   N,  -1,   32,32               ,   16,31 , Symbol::TLS_REF ,                              MOVW  )
-ARD(TLSIE_MOVW_GOTTPREL_G0_NC    , STATIC ,  AARCH64    ,   N,  -1,    0,0                ,    0,15 , Symbol::TLS_REF ,                              MOVW  )
+ARD(TLSIE_MOVW_GOTTPREL_G1       , STATIC ,  AARCH64    ,   Y,  -1,   32,32               ,   16,31 , Symbol::TLS_REF ,                              MOVW  )
+ARD(TLSIE_MOVW_GOTTPREL_G0_NC    , STATIC ,  AARCH64    ,   Y,  -1,    0,0                ,    0,15 , Symbol::TLS_REF ,                              MOVW  )
 ARD(TLSIE_ADR_GOTTPREL_PAGE21    , STATIC ,  AARCH64    ,   Y,  -1,   32,32               ,   12,32 , Symbol::TLS_REF ,                              ADRP  )
 ARD(TLSIE_LD64_GOTTPREL_LO12_NC  , STATIC ,  AARCH64    ,   Y,  -1,    0,RL_CHECK_ALIGN8  ,    3,11 , Symbol::TLS_REF ,                              LDST  )
 ARD(TLSIE_LD_GOTTPREL_PREL19     , STATIC ,  AARCH64    ,   N,  -1,   20,20               ,    2,20 , Symbol::TLS_REF ,                              LD    )

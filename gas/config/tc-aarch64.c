@@ -3099,6 +3099,15 @@ static struct reloc_table_entry reloc_table[] =
    BFD_RELOC_AARCH64_LD_GOT_LO12_NC,
    0},
 
+  /* Bits 0-15 of GOT entry offset from the GOT base: MOV[NZ].  */
+  {"gotoff_g0", 0,
+   0,				/* adr_type */
+   0,
+   BFD_RELOC_AARCH64_MOVW_GOTOFF_G0,
+   0,
+   0,
+   0},
+
   /* 0-15 bits of address/value: MOVk, no check.  */
   {"gotoff_g0_nc", 0,
    0,				/* adr_type */
@@ -3113,6 +3122,42 @@ static struct reloc_table_entry reloc_table[] =
    0,				/* adr_type */
    0,
    BFD_RELOC_AARCH64_MOVW_GOTOFF_G1,
+   0,
+   0,
+   0},
+
+  /* Bits 16-31 of GOT entry offset from the GOT base: MOVK, no check.  */
+  {"gotoff_g1_nc", 0,
+   0,				/* adr_type */
+   0,
+   BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC,
+   0,
+   0,
+   0},
+
+  /* Bits 32-47 of GOT entry offset from the GOT base: MOV[NZ].  */
+  {"gotoff_g2", 0,
+   0,				/* adr_type */
+   0,
+   BFD_RELOC_AARCH64_MOVW_GOTOFF_G2,
+   0,
+   0,
+   0},
+
+  /* Bits 32-47 of GOT entry offset from the GOT base: MOVK, no check.  */
+  {"gotoff_g2_nc", 0,
+   0,				/* adr_type */
+   0,
+   BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC,
+   0,
+   0,
+   0},
+
+  /* Bits 48-63 of GOT entry offset from the GOT base: MOV[NZ].  */
+  {"gotoff_g3", 0,
+   0,				/* adr_type */
+   0,
+   BFD_RELOC_AARCH64_MOVW_GOTOFF_G3,
    0,
    0,
    0},
@@ -3490,6 +3535,13 @@ aarch64_force_reloc (unsigned int type)
     case BFD_RELOC_AARCH64_LDST64_LO12:
     case BFD_RELOC_AARCH64_LDST8_LO12:
     case BFD_RELOC_AARCH64_LDST_LO12:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
     case BFD_RELOC_AARCH64_TLSDESC_ADD_LO12:
     case BFD_RELOC_AARCH64_TLSDESC_ADR_PAGE21:
     case BFD_RELOC_AARCH64_TLSDESC_ADR_PREL21:
@@ -6492,17 +6544,24 @@ process_movw_reloc_info (void)
 
   is32 = inst.base.operands[0].qualifier == AARCH64_OPND_QLF_W ? 1 : 0;
 
+  /* R_AARCH64_MOVW_GOTOFF_G3 is allowed on MOVK: a GOT offset may be built
+     low chunk first (MOVZ G0_NC, then MOVKs ending in G3), as LLVM does, and
+     linkers leave a MOVK a MOVK.  */
   if (inst.base.opcode->op == OP_MOVK)
     switch (inst.reloc.type)
       {
       case BFD_RELOC_AARCH64_MOVW_G0_S:
       case BFD_RELOC_AARCH64_MOVW_G1_S:
       case BFD_RELOC_AARCH64_MOVW_G2_S:
+      case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+      case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+      case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
       case BFD_RELOC_AARCH64_MOVW_PREL_G0:
       case BFD_RELOC_AARCH64_MOVW_PREL_G1:
       case BFD_RELOC_AARCH64_MOVW_PREL_G2:
       case BFD_RELOC_AARCH64_MOVW_PREL_G3:
       case BFD_RELOC_AARCH64_TLSGD_MOVW_G1:
+      case BFD_RELOC_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
       case BFD_RELOC_AARCH64_TLSLE_MOVW_TPREL_G0:
       case BFD_RELOC_AARCH64_TLSLE_MOVW_TPREL_G1:
       case BFD_RELOC_AARCH64_TLSLE_MOVW_TPREL_G2:
@@ -6518,6 +6577,7 @@ process_movw_reloc_info (void)
     case BFD_RELOC_AARCH64_MOVW_G0:
     case BFD_RELOC_AARCH64_MOVW_G0_NC:
     case BFD_RELOC_AARCH64_MOVW_G0_S:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
     case BFD_RELOC_AARCH64_MOVW_PREL_G0:
     case BFD_RELOC_AARCH64_MOVW_PREL_G0_NC:
@@ -6534,6 +6594,7 @@ process_movw_reloc_info (void)
     case BFD_RELOC_AARCH64_MOVW_G1_NC:
     case BFD_RELOC_AARCH64_MOVW_G1_S:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
     case BFD_RELOC_AARCH64_MOVW_PREL_G1:
     case BFD_RELOC_AARCH64_MOVW_PREL_G1_NC:
     case BFD_RELOC_AARCH64_TLSDESC_OFF_G1:
@@ -6548,6 +6609,8 @@ process_movw_reloc_info (void)
     case BFD_RELOC_AARCH64_MOVW_G2:
     case BFD_RELOC_AARCH64_MOVW_G2_NC:
     case BFD_RELOC_AARCH64_MOVW_G2_S:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
     case BFD_RELOC_AARCH64_MOVW_PREL_G2:
     case BFD_RELOC_AARCH64_MOVW_PREL_G2_NC:
     case BFD_RELOC_AARCH64_TLSLD_MOVW_DTPREL_G2:
@@ -6562,6 +6625,7 @@ process_movw_reloc_info (void)
       shift = 32;
       break;
     case BFD_RELOC_AARCH64_MOVW_G3:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
     case BFD_RELOC_AARCH64_MOVW_PREL_G3:
       if (is32)
 	{
@@ -10146,6 +10210,11 @@ md_apply_fix (fixS * fixP, valueT * valP, segT seg)
     case BFD_RELOC_AARCH64_LDST32_LO12:
     case BFD_RELOC_AARCH64_LDST64_LO12:
     case BFD_RELOC_AARCH64_LDST8_LO12:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
       /* Should always be exported to object file, see
 	 aarch64_force_relocation().  */
       gas_assert (!fixP->fx_done);

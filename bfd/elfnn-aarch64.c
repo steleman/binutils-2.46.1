@@ -1099,6 +1099,21 @@ static reloc_howto_type elfNN_aarch64_howto_table[] =
 	 0xffc,			/* dst_mask */
 	 false),		/* pcrel_offset */
 
+  /* MOV[NZ]:   ((G(S)-GOT) >>  0) & 0xffff  */
+  HOWTO64 (AARCH64_R (MOVW_GOTOFF_G0),	/* type */
+	 0,			/* rightshift */
+	 4,			/* size */
+	 17,			/* bitsize */
+	 false,			/* pc_relative */
+	 0,			/* bitpos */
+	 complain_overflow_signed,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,	/* special_function */
+	 AARCH64_R_STR (MOVW_GOTOFF_G0),	/* name */
+	 false,			/* partial_inplace */
+	 0,			/* src_mask */
+	 0xffff,		/* dst_mask */
+	 false),		/* pcrel_offset */
+
   /* Lower 16 bits of GOT offset for the symbol.  */
   HOWTO64 (AARCH64_R (MOVW_GOTOFF_G0_NC),	/* type */
 	 0,			/* rightshift */
@@ -1124,6 +1139,66 @@ static reloc_howto_type elfNN_aarch64_howto_table[] =
 	 complain_overflow_unsigned,	/* complain_on_overflow */
 	 bfd_elf_generic_reloc,	/* special_function */
 	 AARCH64_R_STR (MOVW_GOTOFF_G1),	/* name */
+	 false,			/* partial_inplace */
+	 0,			/* src_mask */
+	 0xffff,		/* dst_mask */
+	 false),		/* pcrel_offset */
+
+  /* MOVK:   ((G(S)-GOT) >> 16) & 0xffff [no overflow check]  */
+  HOWTO64 (AARCH64_R (MOVW_GOTOFF_G1_NC),	/* type */
+	 16,			/* rightshift */
+	 4,			/* size */
+	 16,			/* bitsize */
+	 false,			/* pc_relative */
+	 0,			/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,	/* special_function */
+	 AARCH64_R_STR (MOVW_GOTOFF_G1_NC),	/* name */
+	 false,			/* partial_inplace */
+	 0,			/* src_mask */
+	 0xffff,		/* dst_mask */
+	 false),		/* pcrel_offset */
+
+  /* MOV[NZ]:   ((G(S)-GOT) >> 32) & 0xffff  */
+  HOWTO64 (AARCH64_R (MOVW_GOTOFF_G2),	/* type */
+	 32,			/* rightshift */
+	 4,			/* size */
+	 17,			/* bitsize */
+	 false,			/* pc_relative */
+	 0,			/* bitpos */
+	 complain_overflow_signed,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,	/* special_function */
+	 AARCH64_R_STR (MOVW_GOTOFF_G2),	/* name */
+	 false,			/* partial_inplace */
+	 0,			/* src_mask */
+	 0xffff,		/* dst_mask */
+	 false),		/* pcrel_offset */
+
+  /* MOVK:   ((G(S)-GOT) >> 32) & 0xffff [no overflow check]  */
+  HOWTO64 (AARCH64_R (MOVW_GOTOFF_G2_NC),	/* type */
+	 32,			/* rightshift */
+	 4,			/* size */
+	 16,			/* bitsize */
+	 false,			/* pc_relative */
+	 0,			/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,	/* special_function */
+	 AARCH64_R_STR (MOVW_GOTOFF_G2_NC),	/* name */
+	 false,			/* partial_inplace */
+	 0,			/* src_mask */
+	 0xffff,		/* dst_mask */
+	 false),		/* pcrel_offset */
+
+  /* MOV[NZ]:   ((G(S)-GOT) >> 48) & 0xffff  */
+  HOWTO64 (AARCH64_R (MOVW_GOTOFF_G3),	/* type */
+	 48,			/* rightshift */
+	 4,			/* size */
+	 16,			/* bitsize */
+	 false,			/* pc_relative */
+	 0,			/* bitpos */
+	 complain_overflow_dont,	/* complain_on_overflow */
+	 bfd_elf_generic_reloc,	/* special_function */
+	 AARCH64_R_STR (MOVW_GOTOFF_G3),	/* name */
 	 false,			/* partial_inplace */
 	 0,			/* src_mask */
 	 0xffff,		/* dst_mask */
@@ -5297,6 +5372,11 @@ aarch64_reloc_got_type (bfd_reloc_code_real_type r_type)
     case BFD_RELOC_AARCH64_LD64_GOT_LO12_NC:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
       return GOT_NORMAL;
 
     case BFD_RELOC_AARCH64_TLSGD_ADD_LO12_NC:
@@ -5719,8 +5799,13 @@ aarch64_relocation_aginst_gp_p (bfd_reloc_code_real_type reloc)
   return (reloc == BFD_RELOC_AARCH64_LD32_GOTPAGE_LO14
 	  || reloc == BFD_RELOC_AARCH64_LD64_GOTPAGE_LO15
 	  || reloc == BFD_RELOC_AARCH64_LD64_GOTOFF_LO15
+	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G0
 	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC
-	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G1);
+	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G1
+	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC
+	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G2
+	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC
+	  || reloc == BFD_RELOC_AARCH64_MOVW_GOTOFF_G3);
 }
 
 /* Perform a relocation as part of a final link.  The input relocation type
@@ -5919,6 +6004,11 @@ elfNN_aarch64_final_link_relocate (reloc_howto_type *howto,
 	case BFD_RELOC_AARCH64_LD64_GOTPAGE_LO15:
 	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
 	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
 	case BFD_RELOC_AARCH64_LD64_GOTOFF_LO15:
 	case BFD_RELOC_AARCH64_LD64_GOT_LO12_NC:
 	  base_got = globals->root.sgot;
@@ -6261,6 +6351,11 @@ elfNN_aarch64_final_link_relocate (reloc_howto_type *howto,
     case BFD_RELOC_AARCH64_LD64_GOTOFF_LO15:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
       if (globals->root.sgot == NULL)
 	BFD_ASSERT (h != NULL);
 
@@ -8013,6 +8108,11 @@ elfNN_aarch64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	    case BFD_RELOC_AARCH64_LD64_GOT_LO12_NC:
 	    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
 	    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+	    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+	    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+	    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+	    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+	    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
 	    case BFD_RELOC_AARCH64_NN:
 	      if (htab->root.dynobj == NULL)
 		htab->root.dynobj = abfd;
@@ -8212,6 +8312,11 @@ elfNN_aarch64_check_relocs (bfd *abfd, struct bfd_link_info *info,
 	case BFD_RELOC_AARCH64_LD64_GOT_LO12_NC:
 	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
 	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+	case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
 	case BFD_RELOC_AARCH64_TLSDESC_ADD_LO12:
 	case BFD_RELOC_AARCH64_TLSDESC_ADR_PAGE21:
 	case BFD_RELOC_AARCH64_TLSDESC_ADR_PREL21:

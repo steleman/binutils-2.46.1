@@ -2984,6 +2984,31 @@ riscv_elf_relocate_section (bfd *output_bfd,
 	  {
 	    bfd_vma old_value = bfd_get (howto->bitsize, input_bfd,
 					 contents + rel->r_offset);
+
+	    /* RISC-V has no 64-bit PC-relative data relocation, so an 8-byte
+	       "sym - ." in .eh_frame, such as a DW_EH_PE_pcrel | sdata8 FDE
+	       initial location or LSDA pointer, is an ADD/SUB pair whose
+	       subtrahend is a local label at the field itself.  When
+	       .eh_frame is edited, such labels have already been moved to
+	       their new offsets, but the .eh_frame writer adjusts every
+	       PC-relative field of a moved entry, expecting it to have been
+	       resolved at its original location as R_RISCV_32_PCREL is.
+	       Resolve the subtrahend at the original location too, or the
+	       adjustment is applied twice.  */
+	    if (sym != NULL
+		&& sec == input_section
+		&& input_section->sec_info_type == SEC_INFO_TYPE_EH_FRAME
+		&& ELF_ST_TYPE (sym->st_info) != STT_SECTION)
+	      {
+		bfd_vma new_off
+		  = _bfd_elf_eh_frame_section_offset (output_bfd, info,
+						      input_section,
+						      rel->r_offset);
+		if (new_off < (bfd_vma) -2
+		    && sym->st_value + rel->r_addend == new_off)
+		  relocation = sec_addr (input_section) + rel->r_offset;
+	      }
+
 	    relocation = old_value - relocation;
 	  }
 	  break;

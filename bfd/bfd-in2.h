@@ -6627,6 +6627,10 @@ enum bfd_reloc_code_real
      BFD_RELOC_AARCH64_ADR_GOT_PAGE.  Valid in ILP32 ABI only.  */
   BFD_RELOC_AARCH64_LD32_GOT_LO12_NC,
 
+  /* AArch64 MOV[NZ] instruction with bits 0 to 15 of the offset of the GOT
+     entry for this symbol from the GOT base.  Valid in LP64 ABI only.  */
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G0,
+
   /* Unsigned 16 bit byte offset for 64 bit load/store from the GOT entry
      for this symbol.  Valid in LP64 ABI only.  */
   BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC,
@@ -6634,6 +6638,24 @@ enum bfd_reloc_code_real
   /* Unsigned 16 bit byte higher offset for 64 bit load/store from the
      GOT entry for this symbol.  Valid in LP64 ABI only.  */
   BFD_RELOC_AARCH64_MOVW_GOTOFF_G1,
+
+  /* AArch64 MOVK instruction with bits 16 to 31 of the offset of the GOT
+     entry for this symbol from the GOT base.  No overflow checking.  Valid
+     in LP64 ABI only.  */
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC,
+
+  /* AArch64 MOV[NZ] instruction with bits 32 to 47 of the offset of the GOT
+     entry for this symbol from the GOT base.  Valid in LP64 ABI only.  */
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G2,
+
+  /* AArch64 MOVK instruction with bits 32 to 47 of the offset of the GOT
+     entry for this symbol from the GOT base.  No overflow checking.  Valid
+     in LP64 ABI only.  */
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC,
+
+  /* AArch64 MOV[NZ] instruction with bits 48 to 63 of the offset of the GOT
+     entry for this symbol from the GOT base.  Valid in LP64 ABI only.  */
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G3,
 
   /* Unsigned 15 bit byte offset for 64 bit load/store from the page of
      the GOT entry for this symbol.  Valid in LP64 ABI only.  */

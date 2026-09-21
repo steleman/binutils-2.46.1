@@ -6838,7 +6838,12 @@ ENUMDOC
   Unsigned 12 bit byte offset for 32 bit load/store from the page of
   the GOT entry for this symbol.  Used in conjunction with
   BFD_RELOC_AARCH64_ADR_GOT_PAGE.  Valid in ILP32 ABI only.
- ENUM
+ENUM
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G0
+ENUMDOC
+  AArch64 MOV[NZ] instruction with bits 0 to 15 of the offset of the GOT
+  entry for this symbol from the GOT base.  Valid in LP64 ABI only.
+ENUM
   BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC
 ENUMDOC
   Unsigned 16 bit byte offset for 64 bit load/store from the GOT entry
@@ -6848,6 +6853,28 @@ ENUM
 ENUMDOC
   Unsigned 16 bit byte higher offset for 64 bit load/store from the
   GOT entry for this symbol.  Valid in LP64 ABI only.
+ENUM
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC
+ENUMDOC
+  AArch64 MOVK instruction with bits 16 to 31 of the offset of the GOT
+  entry for this symbol from the GOT base.  No overflow checking.  Valid
+  in LP64 ABI only.
+ENUM
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G2
+ENUMDOC
+  AArch64 MOV[NZ] instruction with bits 32 to 47 of the offset of the GOT
+  entry for this symbol from the GOT base.  Valid in LP64 ABI only.
+ENUM
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC
+ENUMDOC
+  AArch64 MOVK instruction with bits 32 to 47 of the offset of the GOT
+  entry for this symbol from the GOT base.  No overflow checking.  Valid
+  in LP64 ABI only.
+ENUM
+  BFD_RELOC_AARCH64_MOVW_GOTOFF_G3
+ENUMDOC
+  AArch64 MOV[NZ] instruction with bits 48 to 63 of the offset of the GOT
+  entry for this symbol from the GOT base.  Valid in LP64 ABI only.
 ENUM
   BFD_RELOC_AARCH64_LD64_GOTOFF_LO15
 ENUMDOC

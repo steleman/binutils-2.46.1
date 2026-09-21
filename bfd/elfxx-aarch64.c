@@ -317,14 +317,24 @@ _bfd_aarch64_elf_put_addend (bfd *abfd,
     case BFD_RELOC_AARCH64_MOVW_PREL_G1:
     case BFD_RELOC_AARCH64_MOVW_PREL_G2:
     case BFD_RELOC_AARCH64_MOVW_PREL_G3:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
+    case BFD_RELOC_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
     case BFD_RELOC_AARCH64_TLSLD_MOVW_DTPREL_G0:
     case BFD_RELOC_AARCH64_TLSLD_MOVW_DTPREL_G1:
     case BFD_RELOC_AARCH64_TLSLD_MOVW_DTPREL_G2:
     case BFD_RELOC_AARCH64_TLSLE_MOVW_TPREL_G0:
     case BFD_RELOC_AARCH64_TLSLE_MOVW_TPREL_G1:
     case BFD_RELOC_AARCH64_TLSLE_MOVW_TPREL_G2:
-      /* NOTE: We can only come here with movz or movn.  */
-      if (addend < 0)
+      /* Select MOVZ or MOVN from the sign of the value.  An instruction
+	 that is already a MOVK is left alone and only has its immediate
+	 patched, as lld does: some compilers emit these relocations on the
+	 final MOVK of a sequence that starts with a MOVZ.  */
+      if ((contents & (3u << 29)) == (3u << 29))
+	;
+      else if (addend < 0)
 	{
 	  /* Force use of MOVN.  */
 	  addend = ~addend;
@@ -348,7 +358,8 @@ _bfd_aarch64_elf_put_addend (bfd *abfd,
     case BFD_RELOC_AARCH64_MOVW_G2_NC:
     case BFD_RELOC_AARCH64_MOVW_G3:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
-    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
     case BFD_RELOC_AARCH64_MOVW_PREL_G0_NC:
     case BFD_RELOC_AARCH64_MOVW_PREL_G1_NC:
     case BFD_RELOC_AARCH64_MOVW_PREL_G2_NC:
@@ -357,7 +368,6 @@ _bfd_aarch64_elf_put_addend (bfd *abfd,
     case BFD_RELOC_AARCH64_TLSGD_MOVW_G0_NC:
     case BFD_RELOC_AARCH64_TLSGD_MOVW_G1:
     case BFD_RELOC_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC:
-    case BFD_RELOC_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
     case BFD_RELOC_AARCH64_TLSLD_MOVW_DTPREL_G0_NC:
     case BFD_RELOC_AARCH64_TLSLD_MOVW_DTPREL_G1_NC:
     case BFD_RELOC_AARCH64_TLSLE_MOVW_TPREL_G0_NC:
@@ -510,8 +520,13 @@ _bfd_aarch64_elf_resolve_relocation (bfd *input_bfd,
       addend = PG (addend);
       /* Fall through.  */
     case BFD_RELOC_AARCH64_LD64_GOTOFF_LO15:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G0_NC:
     case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G1_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G2_NC:
+    case BFD_RELOC_AARCH64_MOVW_GOTOFF_G3:
       value = value - addend;
       break;
 

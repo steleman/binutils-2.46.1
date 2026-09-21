@@ -5454,6 +5454,15 @@ class AArch64_relocate_functions
 	AArch64_valtype x,
 	const AArch64_reloc_property* reloc_property)
   {
+    // An instruction that is already a MOVK only has its immediate patched,
+    // as lld does: some compilers emit MOV[NZ]-class relocations on the
+    // final MOVK of a sequence that starts with a MOVZ.
+    typedef typename elfcpp::Swap<32, big_endian>::Valtype Insntype;
+    Insntype insn = elfcpp::Swap<32, big_endian>::readval(
+	reinterpret_cast<Insntype*>(view));
+    if ((insn & (0x3 << 29)) == (0x3 << 29))
+      return This::template reloc_common<32>(view, x, reloc_property);
+
     // Select bits from X.
     Address immed;
     bool is_movz;
@@ -5900,6 +5909,12 @@ Target_aarch64<size, big_endian>::optimize_tls_reloc(bool is_final,
 
     case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
     case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC:
+      // The MOVZ/MOVK form of Initial-Exec, used by the large code model.
+      // It must not be relaxed to Local-Exec: the GOT offset it computes
+      // indexes the GOT base with a register-offset load that carries no
+      // relocation, so that load cannot be rewritten.
+      return tls::TLSOPT_NONE;
+
     case elfcpp::R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
     case elfcpp::R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
     case elfcpp::R_AARCH64_TLSIE_LD_GOTTPREL_PREL19:
@@ -5950,6 +5965,20 @@ Target_aarch64<size, big_endian>::Scan::possible_function_pointer_reloc(
     case elfcpp::R_AARCH64_ADD_ABS_LO12_NC:
     case elfcpp::R_AARCH64_ADR_GOT_PAGE:
     case elfcpp::R_AARCH64_LD64_GOT_LO12_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G0:
+    case elfcpp::R_AARCH64_MOVW_PREL_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G3:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G3:
       {
 	return true;
       }
@@ -6149,6 +6178,13 @@ Target_aarch64<size, big_endian>::Scan::local(
     case elfcpp::R_AARCH64_ADR_GOT_PAGE:
     case elfcpp::R_AARCH64_LD64_GOT_LO12_NC:
     case elfcpp::R_AARCH64_LD64_GOTPAGE_LO15:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G3:
       // The above relocations are used to access GOT entries.
       {
 	Output_data_got_aarch64<size, big_endian>* got =
@@ -6199,6 +6235,13 @@ Target_aarch64<size, big_endian>::Scan::local(
     case elfcpp::R_AARCH64_LDST32_ABS_LO12_NC:  // 285
     case elfcpp::R_AARCH64_LDST64_ABS_LO12_NC:  // 286
     case elfcpp::R_AARCH64_LDST128_ABS_LO12_NC: // 299
+    case elfcpp::R_AARCH64_MOVW_PREL_G0:
+    case elfcpp::R_AARCH64_MOVW_PREL_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G3:
        break;
 
     // Control flow, pc-relative. We don't need to do anything for a relative
@@ -6212,6 +6255,8 @@ Target_aarch64<size, big_endian>::Scan::local(
 
     case elfcpp::R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
     case elfcpp::R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC:
       {
 	tls::Tls_optimization tlsopt = Target_aarch64<size, big_endian>::
 	  optimize_tls_reloc(!parameters->options().shared(), r_type);
@@ -6520,6 +6565,13 @@ Target_aarch64<size, big_endian>::Scan::global(
     case elfcpp::R_AARCH64_LDST32_ABS_LO12_NC:  // 285
     case elfcpp::R_AARCH64_LDST64_ABS_LO12_NC:  // 286
     case elfcpp::R_AARCH64_LDST128_ABS_LO12_NC: // 299
+    case elfcpp::R_AARCH64_MOVW_PREL_G0:
+    case elfcpp::R_AARCH64_MOVW_PREL_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G3:
       {
 	if (gsym->needs_plt_entry())
 	  target->make_plt_entry(symtab, layout, gsym);
@@ -6539,6 +6591,13 @@ Target_aarch64<size, big_endian>::Scan::global(
     case elfcpp::R_AARCH64_ADR_GOT_PAGE:
     case elfcpp::R_AARCH64_LD64_GOT_LO12_NC:
     case elfcpp::R_AARCH64_LD64_GOTPAGE_LO15:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G3:
       {
 	// The above relocations are used to access GOT entries.
 	// Note a GOT entry is an *address* to a symbol.
@@ -6672,6 +6731,8 @@ Target_aarch64<size, big_endian>::Scan::global(
 
     case elfcpp::R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
     case elfcpp::R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:  // Initial executable
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC:
       {
 	tls::Tls_optimization tlsopt = Target_aarch64<size, big_endian>::
 	  optimize_tls_reloc(gsym->final_value_is_known(), r_type);
@@ -7217,6 +7278,43 @@ Target_aarch64<size, big_endian>::Relocate::relocate(
 				  reloc_property);
       break;
 
+    // MOV[NZ]: S + A - P, rewriting the instruction to MOVZ or MOVN
+    // according to the sign of the value.
+    case elfcpp::R_AARCH64_MOVW_PREL_G0:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2:
+    case elfcpp::R_AARCH64_MOVW_PREL_G3:
+      reloc_status = Reloc::movnz(view,
+				  psymval->value(object, addend) - address,
+				  reloc_property);
+      break;
+
+    // MOVK: S + A - P, no overflow check.
+    case elfcpp::R_AARCH64_MOVW_PREL_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_PREL_G2_NC:
+      reloc_status = Reloc::template pcrela_general<32>(
+	view, object, psymval, addend, address, reloc_property);
+      break;
+
+    // G(GDAT(S)) - GOT.  GOT_OFFSET is already relative to
+    // _GLOBAL_OFFSET_TABLE_, including the bias applied to it for large GOTs.
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G3:
+      gold_assert(have_got_offset);
+      reloc_status = Reloc::movnz(view, got_offset + addend, reloc_property);
+      break;
+
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G0_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G1_NC:
+    case elfcpp::R_AARCH64_MOVW_GOTOFF_G2_NC:
+      gold_assert(have_got_offset);
+      reloc_status = Reloc::template reloc_common<32>(
+	view, got_offset + addend, reloc_property);
+      break;
+
     case elfcpp::R_AARCH64_LD_PREL_LO19:
       reloc_status = Reloc::template pcrela_general<32>(
 	  view, object, psymval, addend, address, reloc_property);
@@ -7306,6 +7404,8 @@ Target_aarch64<size, big_endian>::Relocate::relocate(
     case elfcpp::R_AARCH64_TLSLD_ADD_DTPREL_LO12_NC:
     case elfcpp::R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
     case elfcpp::R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC:
     case elfcpp::R_AARCH64_TLSLE_MOVW_TPREL_G2:
     case elfcpp::R_AARCH64_TLSLE_MOVW_TPREL_G1:
     case elfcpp::R_AARCH64_TLSLE_MOVW_TPREL_G1_NC:
@@ -7546,6 +7646,8 @@ Target_aarch64<size, big_endian>::Relocate::relocate_tls(
 
     case elfcpp::R_AARCH64_TLSIE_ADR_GOTTPREL_PAGE21:
     case elfcpp::R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:  // Initial-exec
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
+    case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC:
       {
 	if (tlsopt == tls::TLSOPT_TO_LE)
 	  {
@@ -7586,6 +7688,22 @@ Target_aarch64<size, big_endian>::Relocate::relocate_tls(
 	  case elfcpp::R_AARCH64_TLSIE_LD64_GOTTPREL_LO12_NC:
 	    return aarch64_reloc_funcs::template rela_general<32>(
 	      view, got_entry_address, addend, reloc_property);
+	  case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1:
+	  case elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G0_NC:
+	    {
+	      // G(GTPREL(S)) - GOT, where GOT is _GLOBAL_OFFSET_TABLE_.  Its
+	      // value includes the bias applied for GOTs of 0x8000 bytes or
+	      // more; see Target_aarch64::do_finalize_sections.
+	      typename elfcpp::Elf_types<size>::Elf_Addr got_base =
+		target->got_->address()
+		+ (target->got_->current_data_size() >= 0x8000 ? 0x8000 : 0);
+	      typename elfcpp::Elf_types<size>::Elf_Addr x =
+		got_entry_address + addend - got_base;
+	      if (r_type == elfcpp::R_AARCH64_TLSIE_MOVW_GOTTPREL_G1)
+		return aarch64_reloc_funcs::movnz(view, x, reloc_property);
+	      return aarch64_reloc_funcs::template reloc_common<32>(
+		view, x, reloc_property);
+	    }
 	  default:
 	    gold_unreachable();
 	  }

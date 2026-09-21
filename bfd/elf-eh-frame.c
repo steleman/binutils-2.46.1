@@ -1641,6 +1641,55 @@ _bfd_elf_discard_section_eh_frame
   return changed;
 }
 
+/* Return TRUE if HDR_SEC, the .eh_frame_hdr section of OUTPUT_BFD, needs
+   8-byte encodings.  eh_frame_ptr holds the address of .eh_frame, and the
+   binary search table FDE initial locations and FDE addresses, all
+   relative to .eh_frame_hdr, which DW_EH_PE_sdata4 limits to +/-2GiB.
+   Code models that make no assumptions about the distance between
+   sections, such as the large code model, can place code or .eh_frame
+   further away than that.  As lld does, use 8-byte encodings for
+   eh_frame_ptr and the table together.
+
+   This is called after sections have been allocated addresses, but before
+   the final layout, so allow a margin for sections to move by stubs or
+   relaxation.  The 32-bit encodings are kept whenever they can work, so
+   existing output is unchanged.  */
+
+static bool
+eh_frame_hdr_needs_64bit (bfd *output_bfd, asection *hdr_sec)
+{
+  const bfd_vma limit = (bfd_vma) 1 << 31;
+  const bfd_vma margin = limit >> 4;
+  bfd_vma base;
+  asection *o;
+
+  /* The output ELF header has not been initialized yet.  */
+  if (get_elf_backend_data (output_bfd)->s->elfclass != ELFCLASS64
+      || hdr_sec->output_section == NULL)
+    return false;
+
+  base = hdr_sec->output_section->vma + hdr_sec->output_offset;
+  for (o = output_bfd->sections; o != NULL; o = o->next)
+    {
+      bfd_vma lo, hi, dist;
+
+      if ((o->flags & SEC_ALLOC) == 0
+	  || ((o->flags & SEC_CODE) == 0
+	      && strcmp (o->name, ".eh_frame") != 0))
+	continue;
+
+      lo = o->vma;
+      hi = o->vma + o->size;
+      dist = lo < base ? base - lo : lo - base;
+      if (dist >= limit - margin)
+	return true;
+      dist = hi < base ? base - hi : hi - base;
+      if (dist >= limit - margin)
+	return true;
+    }
+  return false;
+}
+
 /* This function is called for .eh_frame_hdr section after
    _bfd_elf_discard_section_eh_frame has been called on all .eh_frame
    input sections.  It finalizes the size of .eh_frame_hdr section.  */
@@ -1677,9 +1726,12 @@ _bfd_elf_discard_section_eh_frame_hdr (struct bfd_link_info *info)
     }
   else
     {
-      sec->size = EH_FRAME_HDR_SIZE;
+      hdr_info->u.dwarf.hdr_64
+	= eh_frame_hdr_needs_64bit (info->output_bfd, sec);
+      sec->size = EH_FRAME_HDR_SIZE + (hdr_info->u.dwarf.hdr_64 ? 4 : 0);
       if (hdr_info->u.dwarf.table)
-	sec->size += 4 + hdr_info->u.dwarf.fde_count * 8;
+	sec->size += (4 + hdr_info->u.dwarf.fde_count
+		      * (hdr_info->u.dwarf.hdr_64 ? 16 : 8));
     }
 
   return true;
@@ -2479,11 +2531,16 @@ write_dwarf_eh_frame_hdr (bfd *abfd, struct bfd_link_info *info)
   asection *eh_frame_sec;
   bfd_size_type size;
   bfd_vma encoded_eh_frame;
+  bool hdr_64 = hdr_info->u.dwarf.hdr_64;
+  unsigned int ent_size = hdr_64 ? 16 : 8;
+  /* Version, three encodings and eh_frame_ptr.  */
+  unsigned int hdr_size = EH_FRAME_HDR_SIZE + (hdr_64 ? 4 : 0);
+  bfd_byte ptr_enc;
 
-  size = EH_FRAME_HDR_SIZE;
+  size = hdr_size;
   if (hdr_info->u.dwarf.array
       && hdr_info->array_count == hdr_info->u.dwarf.fde_count)
-    size += 4 + hdr_info->u.dwarf.fde_count * 8;
+    size += 4 + hdr_info->u.dwarf.fde_count * ent_size;
   contents = (bfd_byte *) bfd_malloc (size);
   if (contents == NULL)
     goto out;
@@ -2492,12 +2549,21 @@ write_dwarf_eh_frame_hdr (bfd *abfd, struct bfd_link_info *info)
   if (eh_frame_sec == NULL)
     goto out;
 
-  memset (contents, 0, EH_FRAME_HDR_SIZE);
+  memset (contents, 0, hdr_size);
   /* Version.  */
   contents[0] = 1;
   /* .eh_frame offset.  */
-  contents[1] = get_elf_backend_data (abfd)->elf_backend_encode_eh_address
+  ptr_enc = get_elf_backend_data (abfd)->elf_backend_encode_eh_address
     (abfd, info, eh_frame_sec, 0, sec, 4, &encoded_eh_frame);
+  /* The backend hooks compute a PC-relative offset and choose its size for
+     the 32-bit header; widen the default encoding to hold the full
+     offset.  */
+  if (hdr_64 && ptr_enc == (DW_EH_PE_pcrel | DW_EH_PE_sdata4))
+    ptr_enc = DW_EH_PE_pcrel | DW_EH_PE_sdata8;
+  /* HDR_SIZE assumes an 8-byte eh_frame_ptr in a 64-bit header.  Only 32-bit
+     backends override the encoding, and they never need a 64-bit header.  */
+  BFD_ASSERT (!hdr_64 || (ptr_enc & 0x0f) == DW_EH_PE_sdata8);
+  contents[1] = ptr_enc;
 
   if (hdr_info->u.dwarf.array
       && hdr_info->array_count == hdr_info->u.dwarf.fde_count)
@@ -2505,14 +2571,18 @@ write_dwarf_eh_frame_hdr (bfd *abfd, struct bfd_link_info *info)
       /* FDE count encoding.  */
       contents[2] = DW_EH_PE_udata4;
       /* Search table encoding.  */
-      contents[3] = DW_EH_PE_datarel | DW_EH_PE_sdata4;
+      contents[3] = (DW_EH_PE_datarel
+		     | (hdr_64 ? DW_EH_PE_sdata8 : DW_EH_PE_sdata4));
     }
   else
     {
       contents[2] = DW_EH_PE_omit;
       contents[3] = DW_EH_PE_omit;
     }
-  bfd_put_32 (abfd, encoded_eh_frame, contents + 4);
+  if ((ptr_enc & 0x0f) == DW_EH_PE_sdata8)
+    bfd_put_64 (abfd, encoded_eh_frame, contents + 4);
+  else
+    bfd_put_32 (abfd, encoded_eh_frame, contents + 4);
 
   retval = true;
   if (contents[2] != DW_EH_PE_omit)
@@ -2520,8 +2590,7 @@ write_dwarf_eh_frame_hdr (bfd *abfd, struct bfd_link_info *info)
       unsigned int i;
       bool overlap, overflow;
 
-      bfd_put_32 (abfd, hdr_info->u.dwarf.fde_count,
-		  contents + EH_FRAME_HDR_SIZE);
+      bfd_put_32 (abfd, hdr_info->u.dwarf.fde_count, contents + hdr_size);
       qsort (hdr_info->u.dwarf.array, hdr_info->u.dwarf.fde_count,
 	     sizeof (*hdr_info->u.dwarf.array), vma_compare);
       overlap = false;
@@ -2529,22 +2598,35 @@ write_dwarf_eh_frame_hdr (bfd *abfd, struct bfd_link_info *info)
       for (i = 0; i < hdr_info->u.dwarf.fde_count; i++)
 	{
 	  bfd_vma val;
+	  bfd_byte *ent = contents + hdr_size + 4 + i * ent_size;
 
-	  val = hdr_info->u.dwarf.array[i].initial_loc
-	    - sec->output_section->vma;
-	  val = ((val & 0xffffffff) ^ 0x80000000) - 0x80000000;
-	  if (elf_elfheader (abfd)->e_ident[EI_CLASS] == ELFCLASS64
-	      && (hdr_info->u.dwarf.array[i].initial_loc
-		  != sec->output_section->vma + val))
-	    overflow = true;
-	  bfd_put_32 (abfd, val, contents + EH_FRAME_HDR_SIZE + i * 8 + 4);
-	  val = hdr_info->u.dwarf.array[i].fde - sec->output_section->vma;
-	  val = ((val & 0xffffffff) ^ 0x80000000) - 0x80000000;
-	  if (elf_elfheader (abfd)->e_ident[EI_CLASS] == ELFCLASS64
-	      && (hdr_info->u.dwarf.array[i].fde
-		  != sec->output_section->vma + val))
-	    overflow = true;
-	  bfd_put_32 (abfd, val, contents + EH_FRAME_HDR_SIZE + i * 8 + 8);
+	  if (hdr_64)
+	    {
+	      /* 64-bit entries always fit.  */
+	      val = (hdr_info->u.dwarf.array[i].initial_loc
+		     - sec->output_section->vma);
+	      bfd_put_64 (abfd, val, ent);
+	      val = hdr_info->u.dwarf.array[i].fde - sec->output_section->vma;
+	      bfd_put_64 (abfd, val, ent + 8);
+	    }
+	  else
+	    {
+	      val = hdr_info->u.dwarf.array[i].initial_loc
+		- sec->output_section->vma;
+	      val = ((val & 0xffffffff) ^ 0x80000000) - 0x80000000;
+	      if (elf_elfheader (abfd)->e_ident[EI_CLASS] == ELFCLASS64
+		  && (hdr_info->u.dwarf.array[i].initial_loc
+		      != sec->output_section->vma + val))
+		overflow = true;
+	      bfd_put_32 (abfd, val, ent);
+	      val = hdr_info->u.dwarf.array[i].fde - sec->output_section->vma;
+	      val = ((val & 0xffffffff) ^ 0x80000000) - 0x80000000;
+	      if (elf_elfheader (abfd)->e_ident[EI_CLASS] == ELFCLASS64
+		  && (hdr_info->u.dwarf.array[i].fde
+		      != sec->output_section->vma + val))
+		overflow = true;
+	      bfd_put_32 (abfd, val, ent + 4);
+	    }
 	  if (i != 0
 	      && (hdr_info->u.dwarf.array[i].initial_loc
 		  < (hdr_info->u.dwarf.array[i - 1].initial_loc
