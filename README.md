@@ -1,4 +1,4 @@
-# Large position-independent code model support — GNU binutils 2.46.1
+# Large position-independent code model support -- GNU binutils 2.46.1
 
 This series adds the assembler and linker support needed by the large
 position-independent code model (`-mcmodel=large` with `-fpic`/`-fPIC`), as
@@ -22,21 +22,21 @@ tested.
 
 | Patch | Component | Summary |
 |---|---|---|
-| 01 | bfd, ld | `R_AARCH64_MOVW_GOTOFF_G0..G3` (five new reloc codes and HOWTOs); MOV[NZ] handling of `GOTOFF_G*` and `TLSIE_MOVW_GOTTPREL_G1`; a MOVK stays a MOVK |
-| 02 | gas | `:gotoff_g0:` `:gotoff_g1_nc:` `:gotoff_g2:` `:gotoff_g2_nc:` `:gotoff_g3:` (`:gotoff_g3:` also on MOVK); gas and ld-aarch64 tests |
-| 03 | gold | `R_AARCH64_MOVW_PREL_G*`, `MOVW_GOTOFF_G*`, `TLSIE_MOVW_GOTTPREL_G1/_G0_NC` |
-| 04 | bfd, ld | 64-bit `.eh_frame_hdr` (8-byte `eh_frame_ptr`, `DW_EH_PE_datarel\|sdata8` search table) when code or `.eh_frame` is out of 32-bit reach; AArch64 and RISCV tests |
-| 05 | bfd, ld | RISCV: fix 8-byte PC-relative `.eh_frame` fields (`ADD64`/`SUB64` pairs) in entries moved by `.eh_frame` merging; test |
+| 0001 | bfd, ld | `R_AARCH64_MOVW_GOTOFF_G0..G3` (five new reloc codes and HOWTOs); MOV[NZ] handling of `GOTOFF_G*` and `TLSIE_MOVW_GOTTPREL_G1`; a MOVK stays a MOVK |
+| 0002 | gas | `:gotoff_g0:` `:gotoff_g1_nc:` `:gotoff_g2:` `:gotoff_g2_nc:` `:gotoff_g3:` (`:gotoff_g3:` also on MOVK); gas and ld-aarch64 tests |
+| 0003 | gold | `R_AARCH64_MOVW_PREL_G*`, `MOVW_GOTOFF_G*`, `TLSIE_MOVW_GOTTPREL_G1/_G0_NC` |
+| 0004 | bfd, ld | 64-bit `.eh_frame_hdr` (8-byte `eh_frame_ptr`, `DW_EH_PE_datarel\|sdata8` search table) when code or `.eh_frame` is out of 32-bit reach; AArch64 and RISCV tests |
+| 0005 | bfd, ld | RISCV: fix 8-byte PC-relative `.eh_frame` fields (`ADD64`/`SUB64` pairs) in entries moved by `.eh_frame` merging; test |
 
 Base: `binutils-with-gold-2.46.1` with the Fedora 44 patches from
 `binutils-2.46.1-1.fc44.src.rpm`, applied by `../apply-fedora-patches.sh`.
 Apply in order from the top of that tree:
 
 ```sh
-for p in binutils-mcmodel-large-pic-0*.patch; do patch -p1 < $p; done
+for p in 00*-binutils-mcmodel-large-pic*.patch; do patch -p1 < $p; done
 ```
 
-The series is applied to `../binutils-with-gold-2.46.1`. Patch 01 includes the
+The series is applied to `../binutils-with-gold-2.46.1`. Patch 0001 includes the
 regenerated `bfd/bfd-in2.h` and `bfd/libbfd.h` (from `make headers` in the
 build's `bfd/` directory).
 
@@ -44,17 +44,17 @@ build's `bfd/` directory).
 
 | Use | AArch64 | RISCV64 |
 |---|---|---|
-| Assemble GCC large-PIC output with gas | 02 | — (no new operators) |
-| Assemble `clang -S` / `llc` large-PIC output with gas | 02 (`:gotoff_g3:` on MOVK) | — |
-| Link large-PIC objects with ld.bfd | 01 | — |
-| Link large-PIC objects with ld.gold | 03 | No RISCV port |
-| Link LLVM objects with ld.bfd or ld.gold | 01 / 03 (MOVN placeholder, `GOTOFF_G3` on MOVK) | — |
-| Large-model C++ exceptions with ld.bfd | — | 05 |
-| Code or `.eh_frame` more than 2 GiB from `.eh_frame_hdr` with ld.bfd | 04 | 04 |
+| Assemble GCC large-PIC output with gas | 0002 | — (no new operators) |
+| Assemble `clang -S` / `llc` large-PIC output with gas | 0002 (`:gotoff_g3:` on MOVK) | — |
+| Link large-PIC objects with ld.bfd | 0001 | — |
+| Link large-PIC objects with ld.gold | 0003 | No RISCV port |
+| Link LLVM objects with ld.bfd or ld.gold | 0001 / 0003 (MOVN placeholder, `GOTOFF_G3` on MOVK) | — |
+| Large-model C++ exceptions with ld.bfd | — | 0005 |
+| Code or `.eh_frame` more than 2 GiB from `.eh_frame_hdr` with ld.bfd | 0004 | 0004 |
 
 ---
 
-## Patch 01 — bfd/ld: `R_AARCH64_MOVW_GOTOFF_G*`
+## Patch 0001 - bfd/ld: `R_AARCH64_MOVW_GOTOFF_G*`
 
 AAELF64 allocates `R_AARCH64_MOVW_GOTOFF_G0` through `_G3` (300–306), which
 compute `G(GDAT(S)) - GOT`: the offset of a symbol's GOT entry from the GOT
@@ -102,7 +102,7 @@ is unchanged.
 
 ---
 
-## Patch 02 — gas: `:gotoff_gN:` operators
+## Patch 0002 - gas: `:gotoff_gN:` operators
 
 `reloc_table` in `gas/config/tc-aarch64.c` gains the missing operators. The
 full set is now:
@@ -148,7 +148,7 @@ Tests:
 
 ---
 
-## Patch 03 — gold: AArch64 large PIC relocations
+## Patch 0003 - gold: AArch64 large PIC relocations
 
 gold rejected every relocation of the model:
 
@@ -172,7 +172,7 @@ and lld.
 
 ---
 
-## Patch 04 — ld: 64-bit `.eh_frame_hdr`
+## Patch 0004 - ld: 64-bit `.eh_frame_hdr`
 
 The binary search table in `.eh_frame_hdr` always used
 `DW_EH_PE_datarel|sdata4`, so any link that placed code more than 2 GiB from
@@ -220,7 +220,7 @@ without GCC patch 09 segfault in the AArch64 libgcc test below, where
 
 ---
 
-## Patch 05 — ld RISCV: 8-byte PC-relative `.eh_frame` fields
+## Patch 0005 - ld RISCV: 8-byte PC-relative `.eh_frame` fields
 
 RISCV has no 64-bit PC-relative data relocation. An 8-byte `sym - .` in
 `.eh_frame` is emitted by GNU as and LLVM as an `R_RISCV_ADD64`/`R_RISCV_SUB64`
@@ -281,7 +281,7 @@ GCC emits `movz #:gotoff_g3:` first and is unaffected by either.
 
 ### RISCV64
 
-| Aspect | GNU binutils (this series) | LLVM / lld | Status |
+| Aspect | GNU binutils (this) | LLVM / lld | Status |
 |---|---|---|---|
 | Large PIC relocations | Existing `ADD64`/`SUB64`, `R_RISCV_64` | Same | No new relocation types on either side |
 | 8-byte `.eh_frame` fields after CIE merging | Correct (patch 05) | Correct (lld) | Previously silent corruption in ld.bfd only |
@@ -326,7 +326,7 @@ DejaGnu is not installed on the test machine, so the testsuite checks used a
 harness that runs each `.d` file's as/ld/dump pipeline, plus a
 `run_dump_test`/`regexp_diff` emulator.
 
-### With GCC 16.2.0 (2026-09-17)
+### With GCC 16.2.0 (2026-08-17)
 
 These binutils, built for both targets, were the assembler and linkers for
 the GCC 16.2.0 series verification:
@@ -351,15 +351,108 @@ exercised gold), and 32-bit or big-endian targets beyond building.
 
 ## Building and testing notes
 
+### - AArch64:
+
 ```sh
-$SRC/configure --target=aarch64-linux-gnu --prefix=$PREFIX \
-  --with-sysroot=$SYSROOT --enable-gold --enable-ld=default \
-  --disable-gdb --disable-gdbserver --disable-sim --disable-gprofng \
-  --disable-doc --disable-nls --disable-werror --with-system-zlib
-make MAKEINFO=true
+srcdir="${topdir}/binutils-2.46.1"
+host_platform="x86_64-linux-gnu"
+target_platform="aarch64-linux-gnu"
+sysroot="${cross_toolchain}/aarch64-buildroot-linux-gnu/sysroot/"
+
+${srcdir}/configure \
+  --prefix=${prefix} \
+  --bindir=${bindir} \
+  --libdir=${libdir} \
+  --libexecdir=${libexecdir} \
+  --localstatedir=${localstatedir} \
+  --host=${host_platform} \
+  --target=${target_platform} \
+  --with-sysroot=${sysroot} \
+  --with-build-sysroot=${sysroot} \
+  --enable-ld=default \
+  --enable-gold=yes \
+  --enable-shared \
+  --enable-plugins \
+  --enable-64-bit-bfd \
+  --enable-default-hash-style=gnu \
+  --enable-jansson=no \
+  --enable-host-pie \
+  --enable-gprofng=no \
+  --with-system-zlib=yes \
+  --with-xxhash=no \
+  --with-zstd=no \
+  --enable-compressed-debug-sections=zlib \
+  --enable-default-compressed-debug-sections-algorithm=zlib \
+  --enable-generate-build-notes=yes \
+  --enable-serial-target-configure \
+  --enable-relro=yes \
+  --enable-deterministic-archives \
+  --enable-warn-execstack=yes \
+  --enable-warn-rwx-segments=no \
+  --enable-lto \
+  --enable-host-shared \
+  --enable-new-dtags \
+  --disable-rpath \
+  --enable-separate-code=yes \
+  --enable-rosegment=yes \
+  --enable-threads=yes \
+  --enable-textrel-check=error \
+  --enable-werror=no
+gmake MAKEINFO=true
 ```
 
-- `--with-sysroot` is required for ld to honour `--sysroot` when linking
+### RISCV64:
+
+```sh
+srcdir="${topdir}/binutils-2.46.1"
+host_platform="x86_64-linux-gnu"
+target_platform="riscv64-unknown-linux-gnu"
+cross_toolchain="/opt/riscv"
+sysroot="${cross_toolchain}/sysroot/"
+
+${srcdir}/configure \
+  --prefix=${prefix} \
+  --bindir=${bindir} \
+  --libdir=${libdir} \
+  --libexecdir=${libexecdir} \
+  --localstatedir=${localstatedir} \
+  --host=${host_platform} \
+  --target=${target_platform} \
+  --with-sysroot=${sysroot} \
+  --with-build-sysroot=${sysroot} \
+  --enable-ld=default \
+  --enable-gold=no \
+  --enable-shared \
+  --enable-plugins \
+  --enable-64-bit-bfd \
+  --enable-default-hash-style=gnu \
+  --enable-jansson=no \
+  --enable-host-pie \
+  --enable-gprofng=no \
+  --with-system-zlib=yes \
+  --with-xxhash=no \
+  --with-zstd=no \
+  --enable-compressed-debug-sections=zlib \
+  --enable-default-compressed-debug-sections-algorithm=zlib \
+  --enable-generate-build-notes=yes \
+  --enable-serial-target-configure \
+  --enable-relro=yes \
+  --enable-deterministic-archives \
+  --enable-warn-execstack=yes \
+  --enable-warn-rwx-segments=no \
+  --enable-lto \
+  --enable-host-shared \
+  --enable-new-dtags \
+  --disable-rpath \
+  --enable-separate-code=yes \
+  --enable-rosegment=yes \
+  --enable-threads=yes \
+  --enable-textrel-check=error \
+  --enable-werror=no
+gmake MAKEINFO=true
+```
+
+- `--with-sysroot` is required for ld to honor `--sysroot` when linking
   through the GCC driver. gold has no RISCV port.
 - After editing `bfd/reloc.c`, run `make headers` in the build's `bfd/`
   directory. It rewrites `bfd-in2.h` and `libbfd.h` in the source tree, and
@@ -381,15 +474,15 @@ make MAKEINFO=true
   that is a GCC configuration problem, not a binutils one. The original GCC
   16.0.1 test compilers had it, which produced a wrong "GCC emits `aw` under
   PIC" note, since corrected in the GCC and LLVM docs.
+- The build scripts are in the [build-scripts](build-scripts) directory here.
 
 ## Related work
 
 | Series | Location |
 |---|---|
-| GCC 16.2.0 | `/src/steleman/programming/gcc-mcmodel-large/16.2.0/gcc16-mcmodel-large-pic` |
-| GCC 16.0.1 | `/src/steleman/programming/gcc-mcmodel-large/16.0.1/gcc16-mcmodel-large-pic` |
-| LLVM AArch64 | `/src/steleman/programming/llvm-mcmodel-large/20260909/mcmodel-large-pic-aarch64` (MC operators, lld relocations, codegen, driver; RFC draft) |
-| LLVM RISCV | `/src/steleman/programming/llvm-mcmodel-large/20260909/mcmodel-large-pic-riscv` (prototype behind `-riscv-large-pic`), `mcmodel-large-eh-riscv` (8-byte EH encodings) and `mcmodel-large-jt-riscv` (jump tables in the function's section under the large model) |
+| GCC 16.2.0 | [https://github.com/steleman/gcc-16.2.0](https://github.com/steleman/gcc-16.2.0): (ABI Compatible GCC 16.2.0 fork) |
+| LLVM 23.1.1 AArch64 | [https://github.com/steleman/llvm-23.1.1](https://github.com/steleman/llvm-23.1.1): (MC operators, lld relocations, codegen, driver; RFC draft) |
+| LLVM 23.1.1 RISCV64 | [https://github.com/steleman/llvm-23.1.1](https://github.com/steleman/llvm-23.1.1): (prototype behind `-riscv-large-pic`), `mcmodel-large-eh-riscv` (8-byte EH encodings) and `mcmodel-large-jt-riscv` (jump tables in the function's section under the large model) |
 
-See [BINUTILS-README-MCMODEL-LARGE](BINUTILS-README-MCMODEL-LARGE.txt) in this directory for the original plain-text notes.
+See [BINUTILS-README-MCMODEL-LARGE](BINUTILS-README-MCMODEL-LARGE.txt) in this directory for the original plain-text notes and a lot more details.
 
